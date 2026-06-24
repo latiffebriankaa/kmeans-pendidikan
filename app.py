@@ -5,140 +5,178 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import seaborn as sns
 import warnings
+import os
+
 warnings.filterwarnings('ignore')
 
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import silhouette_score, silhouette_samples
+from sklearn.metrics import silhouette_score
 from sklearn.decomposition import PCA
 
-# Configure Matplotlib styling globally for a clean, modern look
-plt.rcParams['figure.facecolor'] = 'none'
-plt.rcParams['axes.facecolor'] = 'none'
-plt.rcParams['font.family'] = 'sans-serif'
-plt.rcParams['text.color'] = '#1E293B'
-plt.rcParams['axes.labelcolor'] = '#475569'
-plt.rcParams['xtick.color'] = '#475569'
-plt.rcParams['ytick.color'] = '#475569'
-plt.rcParams['grid.color'] = '#E2E8F0'
-plt.rcParams['grid.linestyle'] = '--'
-plt.rcParams['grid.linewidth'] = 0.5
-plt.rcParams['axes.edgecolor'] = '#E2E8F0'
-plt.rcParams['axes.linewidth'] = 0.8
-plt.rcParams['axes.spines.top'] = False
-plt.rcParams['axes.spines.right'] = False
-
-# ============================================================
-# KONFIGURASI HALAMAN
-# ============================================================
+# Konfigurasi dasar halaman
 st.set_page_config(
-    page_title="Analisis Pemerataan Pendidikan Dasar Indonesia",
+    page_title="Analisis Pemerataan Pendidikan Dasar Indonesia - Kelompok 2",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# ============================================================
-# CSS KUSTOM
-# ============================================================
+# Style CSS kustom untuk mempercantik tampilan dashboard
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap');
     
-    /* Global Styles */
+    /* Font global halaman */
     html, body, [class*="css"], .stApp {
+        background-color: #FFFFFF !important;
+        color: #0F172A !important;
         font-family: 'Plus Jakarta Sans', sans-serif !important;
     }
     
-    /* Main Title Styling */
+    /* Desain sidebar kiri */
+    section[data-testid="stSidebar"] {
+        background-color: #F1F5F9 !important;
+        border-right: 1px solid #E2E8F0 !important;
+    }
+    
+    section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {
+        color: #334155 !important;
+    }
+    
+    /* Header menu di sidebar */
+    .sidebar-header {
+        text-align: center;
+        padding: 25px 10px;
+        margin-bottom: 25px;
+        border-bottom: 1px solid #E2E8F0;
+    }
+    
+    .group-badge-sidebar {
+        background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+        color: white;
+        padding: 6px 18px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 800;
+        display: inline-block;
+        box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.15);
+        letter-spacing: 0.5px;
+    }
+    
+    /* Desain menu navigasi tombol */
+    div[data-testid="stSidebar"] div[role="radiogroup"] {
+        gap: 8px !important;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    div[data-testid="stSidebar"] div[role="radiogroup"] label {
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 12px !important;
+        padding: 10px 14px !important;
+        transition: all 0.2s ease-in-out !important;
+        cursor: pointer !important;
+        display: flex !important;
+        align-items: center !important;
+        margin-bottom: 2px !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+    }
+    
+    div[data-testid="stSidebar"] div[role="radiogroup"] label:hover {
+        background-color: #F8FAFC !important;
+        border-color: #CBD5E1 !important;
+        transform: translateX(3px);
+    }
+    
+    /* Style saat menu aktif/dipilih */
+    div[data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) {
+        background-color: #EEF2FF !important;
+        border-color: #6366F1 !important;
+        box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.08) !important;
+    }
+    
+    div[data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) p {
+        color: #4F46E5 !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Sembunyikan bulatan radio default */
+    div[data-testid="stSidebar"] div[role="radiogroup"] label [data-testid="stRadioCircle"],
+    div[data-testid="stSidebar"] div[role="radiogroup"] label span[data-testid="stRadioCircle"] {
+        display: none !important;
+    }
+    
+    div[data-testid="stSidebar"] div[role="radiogroup"] label div[data-testid="stMarkdownContainer"] {
+        margin-left: 0px !important;
+        padding-left: 0px !important;
+    }
+    
+    /* Header judul utama */
     .main-title {
         font-size: 2.1rem;
         font-weight: 800;
-        background: linear-gradient(135deg, #3B82F6 0%, #4F46E5 50%, #7C3AED 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: #0F172A;
         text-align: center;
-        padding: 15px 0 5px 0;
+        padding-top: 15px;
         margin-bottom: 5px;
         letter-spacing: -0.5px;
     }
     
     .sub-title {
-        font-size: 1.05rem;
+        font-size: 0.95rem;
         font-weight: 500;
         color: #64748B;
         text-align: center;
-        margin-bottom: 25px;
+        margin-bottom: 35px;
     }
     
-    /* Metric Cards */
+    /* Kartu metrik ringkasan */
     .metric-card-wrapper {
-        background: rgba(255, 255, 255, 0.75);
+        background: #F8FAFC;
         border: 1px solid #E2E8F0;
-        border-radius: 16px;
-        padding: 20px;
+        border-radius: 14px;
+        padding: 20px 15px;
         text-align: center;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02);
         margin-bottom: 15px;
-        backdrop-filter: blur(10px);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     
     .metric-card-wrapper:hover {
         transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 6px 15px 0 rgba(0, 0, 0, 0.04);
         border-color: #CBD5E1;
     }
     
     .metric-title {
-        font-size: 0.85rem;
-        font-weight: 600;
+        font-size: 0.78rem;
+        font-weight: 700;
         color: #64748B;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 8px;
+        letter-spacing: 1px;
+        margin-bottom: 6px;
     }
     
     .metric-value {
-        font-size: 2.2rem;
-        font-weight: 700;
-        color: #1E293B;
-        line-height: 1.1;
+        font-size: 2.1rem;
+        font-weight: 800;
+        color: #0F172A;
     }
     
-    /* Cluster Cards */
+    /* Kartu informasi kelompok cluster */
     .cluster-card {
-        border-radius: 16px;
-        padding: 20px;
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 14px;
+        padding: 22px;
         margin-bottom: 15px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
-        border: 1px solid transparent;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03);
         transition: transform 0.2s ease;
     }
     
     .cluster-card:hover {
         transform: translateY(-2px);
-    }
-    
-    .card-cluster-0 {
-        background-color: #ECFDF5;
-        border-left: 6px solid #10B981;
-        border-color: #D1FAE5;
-    }
-    .card-cluster-1 {
-        background-color: #FFFBEB;
-        border-left: 6px solid #F59E0B;
-        border-color: #FEF3C7;
-    }
-    .card-cluster-2 {
-        background-color: #FEF2F2;
-        border-left: 6px solid #EF4444;
-        border-color: #FEE2E2;
-    }
-    
-    .card-cluster-generic {
-        background-color: #F8FAFC;
-        border-left: 6px solid #6366F1;
-        border-color: #E2E8F0;
     }
     
     .cluster-card-title {
@@ -149,39 +187,139 @@ st.markdown("""
     }
     
     .cluster-card-count {
-        font-size: 1.5rem;
+        font-size: 1.45rem;
         font-weight: 800;
         color: #0F172A;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
     }
     
     .cluster-card-members {
-        font-size: 0.8rem;
+        font-size: 0.82rem;
         color: #475569;
         line-height: 1.5;
-        background: rgba(255, 255, 255, 0.5);
-        padding: 10px;
+        background: #F8FAFC;
+        padding: 12px;
         border-radius: 8px;
+        border: 1px solid #F1F5F9;
     }
     
-    /* Footer Styling */
     .footer {
         text-align: center;
         color: #94A3B8;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         padding: 25px 0 10px 0;
-        border-top: 1px solid #F1F5F9;
+        border-top: 1px solid #E2E8F0;
         margin-top: 50px;
         font-weight: 500;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# ============================================================
-# FUNGSI: LOAD / GENERATE DATASET
-# ============================================================
-@st.cache_data
-def load_data():
+
+# Koordinat lokasi provinsi untuk menggambar peta sebaran geografis
+def get_province_coordinates():
+    return {
+        'Aceh': (95.32, 4.69),
+        'Sumatera Utara': (99.07, 2.11),
+        'Sumatera Barat': (100.12, -0.74),
+        'Riau': (101.97, 0.54),
+        'Jambi': (102.78, -1.61),
+        'Sumatera Selatan': (104.17, -3.31),
+        'Bengkulu': (102.24, -3.58),
+        'Lampung': (105.15, -4.85),
+        'Kep. Bangka Belitung': (106.14, -2.74),
+        'Kepulauan Bangka Belitung': (106.14, -2.74),
+        'Kepulauan Riau': (104.44, 1.08),
+        'DKI Jakarta': (106.82, -6.17),
+        'Jawa Barat': (107.61, -6.91),
+        'Jawa Tengah': (110.02, -7.15),
+        'DI Yogyakarta': (110.37, -7.80),
+        'Jawa Timur': (112.73, -7.54),
+        'Banten': (106.12, -6.44),
+        'Bali': (115.18, -8.40),
+        'Nusa Tenggara Barat': (117.41, -8.57),
+        'Nusa Tenggara Timur': (121.57, -8.65),
+        'Kalimantan Barat': (111.10, -0.28),
+        'Kalimantan Tengah': (113.92, -1.60),
+        'Kalimantan Selatan': (115.12, -3.00),
+        'Kalimantan Timur': (116.47, 0.53),
+        'Kalimantan Utara': (116.22, 3.07),
+        'Sulawesi Utara': (124.70, 1.25),
+        'Sulawesi Tengah': (120.98, -1.43),
+        'Sulawesi Selatan': (119.97, -3.66),
+        'Sulawesi Tenggara': (122.07, -4.14),
+        'Gorontalo': (122.52, 0.69),
+        'Sulawesi Barat': (119.33, -2.84),
+        'Maluku': (130.14, -3.24),
+        'Maluku Utara': (127.37, 0.64),
+        'Papua Barat': (132.90, -1.33),
+        'Papua': (138.08, -2.50),
+        'Papua Selatan': (139.08, -6.50),
+        'Papua Tengah': (136.00, -3.80),
+        'Papua Pegunungan': (138.80, -4.10),
+        'Papua Barat Daya': (131.25, -1.10)
+    }
+
+# Menghilangkan spasi dan karakter khusus nama provinsi agar mudah dicocokkan
+def normalize_province_name(name):
+    name = str(name).lower()
+    name = name.replace('prov. ', '').replace('provinsi ', '').strip()
+    name = name.replace('.', '').replace('kepulauan', 'kep').replace(' ', '')
+    return name
+
+
+# Fungsi untuk merapikan kolom dan menghitung rasio indikator clustering
+def preprocess_dataframe(df):
+    df.columns = [c.strip() for c in df.columns]
+    df = df.loc[:, df.columns != '']
+    
+    if 'Provinsi' in df.columns and 'Siswa' in df.columns:
+        df['provinsi'] = df['Provinsi'].str.replace('Prov. ', '', regex=False).str.strip()
+        df = df[df['provinsi'] != 'Luar Negeri']
+        
+        # Reset indeks agar pemetaan array PCA tidak bergeser/out of bounds
+        df = df.reset_index(drop=True)
+        
+        numeric_cols = [c for c in df.columns if c not in ['Provinsi', 'provinsi']]
+        for col in numeric_cols:
+            df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
+            
+        k1 = "Kepala Sekolah dan Guru(<S1)"
+        k2 = "Kepala Sekolah dan Guru(≥ S1)"
+        if k1 in df.columns and k2 in df.columns:
+            df['jumlah_guru'] = df[k1] + df[k2]
+        else:
+            df['jumlah_guru'] = df['Siswa'] // 20
+            
+        df['jumlah_siswa'] = df['Siswa']
+        df['rasio_siswa_guru'] = np.where(df['jumlah_guru'] > 0, df['jumlah_siswa'] / df['jumlah_guru'], 0).round(1)
+        
+        # Mengubah nilai absolut putus sekolah/mengulang ke persentase (%)
+        df['angka_mengulang'] = np.where(df['jumlah_siswa'] > 0, (df['Mengulang'] / df['jumlah_siswa']) * 100, 0).round(2)
+        df['angka_putus_sekolah'] = np.where(df['jumlah_siswa'] > 0, (df['Putus Sekolah'] / df['jumlah_siswa']) * 100, 0).round(2)
+        
+        df['jumlah_rombel'] = df['Rombongan Belajar']
+        
+        c_baik = "Ruang kelas(baik)"
+        c_r1 = "Ruang kelas(rusak ringan)"
+        c_r2 = "Ruang kelas(rusak sedang)"
+        c_r3 = "Ruang kelas(rusak berat)"
+        
+        total_kelas = df[c_baik] + df[c_r1] + df[c_r2] + df[c_r3]
+        df['kondisi_ruang_kelas_baik_pct'] = np.where(total_kelas > 0, (df[c_baik] / total_kelas) * 100, 0).round(1)
+        
+        features = [
+            'provinsi', 'jumlah_siswa', 'jumlah_guru', 'rasio_siswa_guru',
+            'angka_mengulang', 'angka_putus_sekolah', 'jumlah_rombel',
+            'kondisi_ruang_kelas_baik_pct'
+        ]
+        return df[features]
+        
+    return df.reset_index(drop=True)
+
+
+# Membuat data simulasi jika berkas CSV tidak ditemukan
+def generate_simulated_data():
     np.random.seed(42)
     provinsi = [
         'Aceh', 'Sumatera Utara', 'Sumatera Barat', 'Riau', 'Jambi',
@@ -215,8 +353,31 @@ def load_data():
     all_data = {k: np.concatenate([d1[k], d2[k], d3[k]]) for k in d1}
     df = pd.DataFrame(all_data)
     df.insert(0, 'provinsi', provinsi)
-    return df
+    return df.reset_index(drop=True)
 
+
+# Fungsi pemuatan data utama
+@st.cache_data
+def load_data(uploaded_file=None):
+    if uploaded_file is not None:
+        try:
+            df_raw = pd.read_csv(uploaded_file)
+            return preprocess_dataframe(df_raw)
+        except Exception as e:
+            st.error(f"Gagal memproses file: {e}")
+            
+    local_csv = "kelayakan-pendidikan-indonesia.csv"
+    if os.path.exists(local_csv):
+        try:
+            df_raw = pd.read_csv(local_csv)
+            return preprocess_dataframe(df_raw)
+        except Exception:
+            pass
+            
+    return generate_simulated_data()
+
+
+# Fungsi komputasi clustering K-Means dan analisis reduksi dimensi PCA
 @st.cache_data
 def run_clustering(df, k):
     fitur = [
@@ -249,83 +410,134 @@ def run_clustering(df, k):
 
     return df, X_scaled, X_pca, kmeans, sil, wcss_list, sil_list, explained, fitur
 
-# ============================================================
-# SIDEBAR
-# ============================================================
+
+# Menu navigasi dan parameter di sidebar kiri
 with st.sidebar:
     st.markdown("""
-        <div style="text-align: center; margin-bottom: 25px; padding: 12px; background: rgba(255, 255, 255, 0.7); border-radius: 16px; border: 1px solid #E2E8F0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/NUSAPUTRA_LOGO.png/320px-NUSAPUTRA_LOGO.png" width="140" style="display: block; margin: 0 auto;"/>
+        <div class="sidebar-header">
+            <div class="group-badge-sidebar">KELOMPOK 2</div>
+            <div style="font-size: 0.8rem; font-weight: 700; color: #475569; margin-top: 8px; letter-spacing: 0.5px;">PROJECT AKHIR ML</div>
         </div>
     """, unsafe_allow_html=True)
     
-    st.markdown("### Pengaturan Model")
+    st.markdown("### Menu Navigasi")
+    menu = st.radio(
+        "Pilih Halaman Analisis:",
+        options=[
+            "Dashboard Ringkasan",
+            "Analisis Elbow & K",
+            "Visualisasi Spasial & PCA",
+            "Detail & Pencarian",
+            "Ekspor Data"
+        ],
+        index=0
+    )
+    
+    st.markdown("---")
+    st.markdown("### Konfigurasi Model")
     k_value = st.slider("Jumlah Cluster (K)", min_value=2, max_value=8, value=3, step=1, help="Tentukan jumlah cluster untuk analisis K-Means.")
 
-    st.markdown("### Upload Dataset")
+    st.markdown("### Input Data")
     uploaded = st.file_uploader("Upload file CSV (opsional)", type=["csv"])
     if not uploaded:
-        st.info("Info: Data simulasi default 38 Provinsi Indonesia 2023-2024 aktif.")
+        if os.path.exists("kelayakan-pendidikan-indonesia.csv"):
+            st.success("Aktif: Data Riil (Local CSV)")
+        else:
+            st.info("Aktif: Data Simulasi Default")
     else:
         st.success("Data Sukses Terupload")
 
+    st.markdown("---")
     st.markdown("### Informasi")
-    st.info("**Algoritma:** K-Means Clustering\n\n**Data:** Pendidikan SD Indonesia 2023–2024\n\n**Sumber:** Kemendikbudristek")
+    st.info("**Model:** K-Means Clustering\n\n**Tingkat:** Pendidikan Dasar SD/MI\n\n**Sumber:** Kemendikbudristek")
     
     st.markdown("""
-        <div style="text-align: center; color: #94A3B8; font-size: 0.75rem; margin-top: 30px; border-top: 1px solid #E2E8F0; padding-top: 15px;">
-            © 2026 — Universitas Nusaputra<br>Teknik Informatika
+        <div style="text-align: center; color: #64748B; font-size: 0.75rem; margin-top: 25px; border-top: 1px solid #E2E8F0; padding-top: 15px;">
+            © 2026 — Teknik Informatika<br>Kelompok 2
         </div>
     """, unsafe_allow_html=True)
 
-# ============================================================
-# LOAD DATA
-# ============================================================
-if uploaded:
-    df_raw = pd.read_csv(uploaded)
-else:
-    df_raw = load_data()
 
+# Load data dan jalankan clustering
+df_raw = load_data(uploaded)
 df, X_scaled, X_pca, kmeans, sil_score_val, wcss_list, sil_list, explained, fitur = run_clustering(df_raw, k_value)
 
-# Label cluster
-label_map   = {i: f"Cluster {chr(65+i)}" for i in range(k_value)}
-label_desc  = {
+# Pemetaan geografis koordinat provinsi
+coords_dict = get_province_coordinates()
+normalized_coords = {normalize_province_name(k): v for k, v in coords_dict.items()}
+
+df['norm_prov'] = df['provinsi'].apply(normalize_province_name)
+df['lon'] = df['norm_prov'].map(lambda x: normalized_coords.get(x, (np.nan, np.nan))[0])
+df['lat'] = df['norm_prov'].map(lambda x: normalized_coords.get(x, (np.nan, np.nan))[1])
+
+# Daftar warna visualisasi cluster (Sky Blue, Teal, Red, Amber, Purple, dst)
+colors_list = ['#0284C7', '#0D9488', '#DC2626', '#D97706', '#7C3AED', '#EC4899', '#2563EB', '#475569']
+
+# Injeksi CSS dinamis untuk mewarnai cluster cards (transparansi 5%)
+dynamic_css = ""
+for i in range(k_value):
+    color = colors_list[i]
+    bg_color = color + "0D"      
+    border_color = color + "26"  
+    dynamic_css += f"""
+    .card-cluster-{i} {{
+        background-color: {bg_color} !important;
+        border-left: 6px solid {color} !important;
+        border-color: {border_color} !important;
+        border-radius: 12px;
+        padding: 18px 22px;
+        margin-bottom: 15px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    }}
+    """
+st.markdown(f"<style>{dynamic_css}</style>", unsafe_allow_html=True)
+
+# Konfigurasi style global diagram Matplotlib (Tema Terang)
+plt.rcParams['figure.facecolor'] = 'none'
+plt.rcParams['axes.facecolor'] = 'none'
+plt.rcParams['font.family'] = 'sans-serif'
+plt.rcParams['text.color'] = '#1E293B'
+plt.rcParams['axes.labelcolor'] = '#475569'
+plt.rcParams['xtick.color'] = '#475569'
+plt.rcParams['ytick.color'] = '#475569'
+plt.rcParams['grid.color'] = '#CBD5E1'
+plt.rcParams['grid.linestyle'] = '--'
+plt.rcParams['grid.linewidth'] = 0.8
+plt.rcParams['axes.edgecolor'] = '#94A3B8'
+plt.rcParams['axes.linewidth'] = 1.0
+plt.rcParams['axes.spines.top'] = False
+plt.rcParams['axes.spines.right'] = False
+
+# Mapping nama label cluster dan keterangannya
+label_map = {i: f"Cluster {chr(65+i)}" for i in range(k_value)}
+label_desc = {
     0: "Kondisi Baik",
     1: "Kondisi Sedang",
     2: "Perlu Perhatian",
     3: "Grup D", 4: "Grup E", 5: "Grup F", 6: "Grup G", 7: "Grup H"
 }
-colors_list = ['#10B981', '#F59E0B', '#EF4444', '#6366F1', '#EC4899', '#06B6D4', '#8B5CF6', '#64748B']
 
 df['label_cluster'] = df['cluster'].apply(
     lambda x: f"{label_map[x]} – {label_desc.get(x, 'Grup ' + chr(65+x))}"
 )
 
-# ============================================================
-# HEADER
-# ============================================================
+# Label fitur global untuk kolom dataframe tabel
+fitur_label = ['Jml Siswa', 'Jml Guru', 'Rasio Siswa/Guru', 'Angka Mengulang (%)',
+               'Angka Putus Sekolah (%)', 'Jml Rombel', 'Kondisi Kelas Baik (%)']
+fitur_label_short = ['Jml Siswa', 'Jml Guru', 'Rasio S/G', 'Mengulang',
+                     'Putus Sekolah', 'Rombel', 'Kelas Baik (%)']
+
+# Judul halaman utama aplikasi
 st.markdown('<div class="main-title">Analisis Pemerataan Pendidikan Dasar Antar Provinsi di Indonesia</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">Menggunakan Algoritma K-Means Clustering | Data Kemendikbudristek 2023–2024</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">Menggunakan Algoritma K-Means Clustering | Data Kemendikbudristek | Dikembangkan oleh Kelompok 2</div>', unsafe_allow_html=True)
 st.markdown("---")
 
-# ============================================================
-# TAB NAVIGASI
-# ============================================================
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "Dashboard Ringkasan",
-    "Analisis Elbow",
-    "Visualisasi Spasial 2D",
-    "Detail dan Pencarian",
-    "Ekspor Data"
-])
 
-# ============================================================
-# TAB 1 — DASHBOARD
-# ============================================================
-with tab1:
-    st.subheader("Ringkasan Hasil Clustering")
+# Tampilan utama berdasarkan pilihan navigasi menu
+if menu == "Dashboard Ringkasan":
+    st.subheader("Ringkasan Hasil Analisis Clustering")
 
+    # Kartu indikator metrik utama
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.markdown(f"""<div class="metric-card-wrapper">
@@ -334,7 +546,7 @@ with tab1:
         </div>""", unsafe_allow_html=True)
     with col2:
         st.markdown(f"""<div class="metric-card-wrapper">
-            <div class="metric-title">Jumlah Cluster</div>
+            <div class="metric-title">Jumlah Cluster (K)</div>
             <div class="metric-value">{k_value}</div>
         </div>""", unsafe_allow_html=True)
     with col3:
@@ -344,192 +556,244 @@ with tab1:
         </div>""", unsafe_allow_html=True)
     with col4:
         st.markdown(f"""<div class="metric-card-wrapper">
-            <div class="metric-title">PCA Explained Var</div>
+            <div class="metric-title">PCA Explained Variance</div>
             <div class="metric-value">{sum(explained):.1f}%</div>
         </div>""", unsafe_allow_html=True)
 
     st.markdown("---")
-    st.subheader("Distribusi Provinsi per Cluster")
+    st.subheader("Pembagian Provinsi Per Cluster")
 
+    # Kartu pembagian kelompok cluster
     cols = st.columns(min(k_value, 3))
     for i in range(k_value):
         subset = df[df['cluster'] == i]
-        card_class = f'card-cluster-{i}' if i < 3 else 'card-cluster-generic'
+        card_class = f'card-cluster-{i}' if i < 8 else 'card-cluster-generic'
         with cols[i % 3]:
             prov_list = "  •  ".join(subset['provinsi'].values)
             st.markdown(f"""
             <div class="cluster-card {card_class}">
-                <div class="cluster-card-title">{label_map[i]} — {label_desc.get(i, 'Grup')}</div>
+                <div class="cluster-card-title" style="color: {colors_list[i]};">{label_map[i]} — {label_desc.get(i, 'Grup')}</div>
                 <div class="cluster-card-count">{len(subset)} Provinsi</div>
                 <div class="cluster-card-members"><strong>Anggota:</strong><br>{prov_list}</div>
             </div>""", unsafe_allow_html=True)
 
     st.markdown("---")
-    st.subheader("Profil Rata-rata Indikator per Cluster")
+    st.subheader("Perbandingan Profil Indikator Kunci")
+    
+    col_vis1, col_vis2 = st.columns([3, 2])
+    
+    # Hitung profil rata-rata masing-masing cluster
     cluster_profile = df.groupby('cluster')[fitur].mean().round(2)
     cluster_profile.index = [f"{label_map[i]} – {label_desc.get(i,'')}" for i in cluster_profile.index]
-    fitur_label = ['Jml Siswa', 'Jml Guru', 'Rasio Siswa/Guru', 'Angka Mengulang',
-                   'Angka Putus Sekolah', 'Jml Rombel', 'Kondisi Kelas (%)']
     cluster_profile.columns = fitur_label
-    st.dataframe(cluster_profile.style.background_gradient(cmap='RdYlGn', axis=0), use_container_width=True)
+    
+    with col_vis1:
+        fig_profile, ax_profile = plt.subplots(figsize=(8, 4.5), facecolor='none')
+        vis_df = pd.DataFrame({
+            'Rasio Siswa/Guru': cluster_profile['Rasio Siswa/Guru'],
+            'Angka Mengulang (%)': cluster_profile['Angka Mengulang (%)'],
+            'Angka Putus Sekolah (%)': cluster_profile['Angka Putus Sekolah (%)'],
+            'Kondisi Kelas Baik (%)': cluster_profile['Kondisi Kelas (%)']
+        })
+        
+        vis_df.plot(kind='bar', ax=ax_profile, color=colors_list[:4], width=0.75)
+        ax_profile.set_xlabel('Cluster', fontsize=9, fontweight='bold')
+        ax_profile.set_ylabel('Nilai Rata-rata', fontsize=9, fontweight='bold')
+        ax_profile.grid(True, axis='y', linestyle='--', alpha=0.7, color='#CBD5E1', linewidth=0.8)
+        plt.xticks(rotation=0, fontsize=8)
+        plt.yticks(fontsize=8)
+        ax_profile.legend(fontsize=8, frameon=True, facecolor='white', edgecolor='#E2E8F0')
+        plt.tight_layout()
+        st.pyplot(fig_profile)
+        plt.close()
+        
+    with col_vis2:
+        fig_pie, ax_pie = plt.subplots(figsize=(5, 4.5), facecolor='none')
+        sizes = df['cluster'].value_counts().sort_index()
+        labels = [f"{label_map[i]}\n({v} prov)" for i, v in sizes.items()]
+        
+        ax_pie.pie(
+            sizes, labels=labels, colors=colors_list[:len(sizes)],
+            autopct='%1.1f%%', startangle=140, pctdistance=0.7,
+            wedgeprops=dict(width=0.4, edgecolor='white', linewidth=2)
+        )
+        ax_pie.set_title('Proporsi Provinsi per Cluster', fontsize=10, fontweight='bold')
+        plt.tight_layout()
+        st.pyplot(fig_pie)
+        plt.close()
+        
+    st.subheader("Detail Profil Rata-rata per Indikator")
+    st.dataframe(cluster_profile.style.background_gradient(cmap='YlGnBu', axis=0), width='stretch')
 
-# ============================================================
-# TAB 2 — ELBOW & EVALUASI
-# ============================================================
-with tab2:
-    st.subheader("Penentuan Jumlah Cluster Optimal")
+elif menu == "Analisis Elbow & K":
+    st.subheader("Evaluasi K-Means: Penentuan Nilai Cluster (K) Optimal")
+    
     col1, col2 = st.columns(2)
-
     with col1:
         fig, ax = plt.subplots(figsize=(6, 4), facecolor='none')
-        ax.plot(range(2, 11), wcss_list, color='#4F46E5', marker='o', linewidth=2, markersize=8, markerfacecolor='#4F46E5', markeredgecolor='white', markeredgewidth=1.5)
-        ax.axvline(x=k_value, color='#EF4444', linestyle='--', linewidth=1.5, label=f'K={k_value} (dipilih)')
-        ax.set_title('Elbow Method', fontsize=12, fontweight='bold', pad=15, color='#1E293B')
+        ax.plot(range(2, 11), wcss_list, color='#0284C7', marker='o', linewidth=2, markersize=8, markerfacecolor='#0284C7', markeredgecolor='white', markeredgewidth=1.5)
+        ax.axvline(x=k_value, color='#DC2626', linestyle='--', linewidth=1.5, label=f'K={k_value} (dipilih)')
+        ax.set_title('Elbow Method (WCSS)', fontsize=12, fontweight='bold', pad=15)
         ax.set_xlabel('Jumlah Cluster (K)', fontsize=10, labelpad=8)
-        ax.set_ylabel('WCSS', fontsize=10, labelpad=8)
+        ax.set_ylabel('WCSS (Inersia)', fontsize=10, labelpad=8)
         ax.legend(frameon=True, facecolor='white', edgecolor='#E2E8F0')
-        ax.grid(True, which='both', linestyle=':', alpha=0.5, color='#CBD5E1')
+        ax.grid(True, which='both', linestyle='--', alpha=0.7, color='#CBD5E1', linewidth=0.8)
         plt.tight_layout()
         st.pyplot(fig)
         plt.close()
 
     with col2:
         fig, ax = plt.subplots(figsize=(6, 4), facecolor='none')
-        ax.plot(range(2, 11), sil_list, color='#10B981', marker='s', linewidth=2, markersize=8, markerfacecolor='#10B981', markeredgecolor='white', markeredgewidth=1.5)
-        ax.axvline(x=k_value, color='#EF4444', linestyle='--', linewidth=1.5, label=f'K={k_value} (dipilih)')
-        ax.set_title('Silhouette Score vs K', fontsize=12, fontweight='bold', pad=15, color='#1E293B')
+        ax.plot(range(2, 11), _sil_list := sil_list, color='#0D9488', marker='s', linewidth=2, markersize=8, markerfacecolor='#0D9488', markeredgecolor='white', markeredgewidth=1.5)
+        ax.axvline(x=k_value, color='#DC2626', linestyle='--', linewidth=1.5, label=f'K={k_value} (dipilih)')
+        ax.set_title('Silhouette Score vs K', fontsize=12, fontweight='bold', pad=15)
         ax.set_xlabel('Jumlah Cluster (K)', fontsize=10, labelpad=8)
         ax.set_ylabel('Silhouette Score', fontsize=10, labelpad=8)
         ax.legend(frameon=True, facecolor='white', edgecolor='#E2E8F0')
-        ax.grid(True, which='both', linestyle=':', alpha=0.5, color='#CBD5E1')
+        ax.grid(True, which='both', linestyle='--', alpha=0.7, color='#CBD5E1', linewidth=0.8)
         plt.tight_layout()
         st.pyplot(fig)
         plt.close()
 
     st.markdown("---")
-    st.subheader("Tabel Evaluasi Semua Nilai K")
+    st.subheader("Tabel Evaluasi Nilai K (Clustering Score)")
     eval_df = pd.DataFrame({
-        'K': list(range(2, 11)),
-        'WCSS': [round(w, 2) for w in wcss_list],
+        'Jumlah Cluster (K)': list(range(2, 11)),
+        'WCSS (Inertia)': [round(w, 2) for w in wcss_list],
         'Silhouette Score': [round(s, 4) for s in sil_list]
     })
-    eval_df['Status'] = eval_df['K'].apply(lambda x: 'Dipilih' if x == k_value else '')
-    st.dataframe(eval_df.style.highlight_max(subset=['Silhouette Score'], color='#c8e6c9'), use_container_width=True)
+    eval_df['Status'] = eval_df['Jumlah Cluster (K)'].apply(lambda x: 'Dipilih (Aktif)' if x == k_value else '')
+    st.dataframe(eval_df.style.highlight_max(subset=['Silhouette Score'], color='#D1FAE5'), width='stretch')
 
     st.info(f"""
     **Interpretasi Silhouette Score:**
-    - **>= 0.70** -> Sangat Baik
-    - **0.50 - 0.69** -> Baik
-    - **0.25 - 0.49** -> Cukup
-    - **< 0.25** -> Kurang
+    - **>= 0.70** -> Struktur cluster sangat kuat (Sangat Baik)
+    - **0.50 - 0.69** -> Struktur cluster cukup baik (Baik)
+    - **0.25 - 0.49** -> Struktur cluster lemah (Cukup)
+    - **< 0.25** -> Tidak ada struktur yang nyata (Kurang)
 
-    Hasil untuk K={k_value}: **{sil_score_val:.4f}** — {'Baik' if sil_score_val >= 0.5 else 'Cukup'}
+    Skor Silhouette untuk K={k_value} adalah **{sil_score_val:.4f}** (Kategori: **{'Baik/Sangat Baik' if sil_score_val >= 0.5 else 'Cukup'}**).
     """)
 
-# ============================================================
-# TAB 3 — VISUALISASI CLUSTER
-# ============================================================
-with tab3:
-    st.subheader("Scatter Plot PCA 2D")
+elif menu == "Visualisasi Spasial & PCA":
+    st.subheader("Peta Spasial Distribusi Cluster Pemerataan Pendidikan Indonesia")
+    st.markdown("Sebaran geografis berdasarkan bujur (longitude) dan lintang (latitude) asli provinsi di Indonesia.")
+    
+    map_df = df.dropna(subset=['lon', 'lat']).copy()
+    if len(map_df) > 0:
+        fig_map, ax_map = plt.subplots(figsize=(12, 6.2), facecolor='none')
+        
+        for c in range(k_value):
+            mask = map_df['cluster'] == c
+            if mask.sum() > 0:
+                ax_map.scatter(
+                    map_df.loc[mask, 'lon'], map_df.loc[mask, 'lat'],
+                    c=colors_list[c], label=f"{label_map[c]} – {label_desc.get(c, '')}",
+                    s=240, alpha=0.9, edgecolors='white', linewidth=1.2, zorder=3
+                )
+                
+                # Menampilkan label teks nama provinsi di atas peta
+                for idx, row in map_df[mask].iterrows():
+                    ax_map.annotate(
+                        row['provinsi'], (row['lon'], row['lat']),
+                        fontsize=7, weight='bold', color='#1E293B',
+                        xytext=(4, 4), textcoords='offset points',
+                        bbox=dict(boxstyle='round,pad=0.2', facecolor='white', alpha=0.85, edgecolor='#CBD5E1', linewidth=0.5)
+                    )
+                        
+        ax_map.set_title('Peta Geografis Cluster Pemerataan Pendidikan Indonesia', fontsize=13, fontweight='bold', pad=15)
+        ax_map.set_xlabel('Garis Bujur (Longitude)', fontsize=9)
+        ax_map.set_ylabel('Garis Lintang (Latitude)', fontsize=9)
+        
+        # Mengatur batas visual agar pas melingkupi kepulauan Indonesia
+        ax_map.set_xlim(94, 142)
+        ax_map.set_ylim(-11.5, 6.5)
+        
+        ax_map.legend(loc='lower left', fontsize=9, frameon=True, facecolor='white', edgecolor='#E2E8F0', shadow=True)
+        ax_map.grid(True, linestyle='--', alpha=0.7, color='#CBD5E1', linewidth=0.8)
+        plt.tight_layout()
+        st.pyplot(fig_map)
+        plt.close()
+    else:
+        st.warning("Data koordinat provinsi tidak ditemukan.")
+        
+    st.markdown("---")
 
-    fig, ax = plt.subplots(figsize=(12, 8), facecolor='none')
+    # Scatter plot pemisahan cluster secara matematis (PCA 2D)
+    st.subheader("Scatter Plot Hasil Reduksi Dimensi (PCA 2D)")
+    st.markdown("Memetakan data multi-variabel ke grafik 2 dimensi koordinat utama.")
+    fig_pca, ax_pca = plt.subplots(figsize=(12, 7.5), facecolor='none')
+    
     for c in range(k_value):
         mask = df['cluster'] == c
-        ax.scatter(X_pca[mask, 0], X_pca[mask, 1],
-                   c=colors_list[c], label=f"{label_map[c]} – {label_desc.get(c, '')}",
-                   s=180, alpha=0.9, edgecolors='white', linewidth=1.2)
+        ax_pca.scatter(
+            X_pca[mask, 0], X_pca[mask, 1],
+            c=colors_list[c], label=f"{label_map[c]} – {label_desc.get(c, '')}",
+            s=200, alpha=0.9, edgecolors='white', linewidth=1.2
+        )
+        
         for i, row in df[mask].iterrows():
-            ax.annotate(row['provinsi'], (X_pca[i, 0], X_pca[i, 1]),
-                        fontsize=9, weight='bold', alpha=0.85, 
-                        xytext=(5, 5), textcoords='offset points')
+            ax_pca.annotate(
+                row['provinsi'], (X_pca[i, 0], X_pca[i, 1]),
+                fontsize=8, weight='bold', color='#1E293B',
+                xytext=(5, 5), textcoords='offset points',
+                bbox=dict(boxstyle='round,pad=0.15', facecolor='white', alpha=0.85, edgecolor='#E2E8F0', linewidth=0.5)
+            )
 
     pca_temp = PCA(n_components=2, random_state=42)
     pca_temp.fit(X_scaled)
     centroids_pca = pca_temp.transform(kmeans.cluster_centers_)
-    ax.scatter(centroids_pca[:, 0], centroids_pca[:, 1],
-               c='#0F172A', marker='X', s=350, zorder=5, label='Centroid Model',
-               edgecolors='white', linewidth=1.5)
+    ax_pca.scatter(
+        centroids_pca[:, 0], centroids_pca[:, 1],
+        c='#0F172A', marker='X', s=350, zorder=5, label='Centroid Model',
+        edgecolors='white', linewidth=1.5
+    )
 
-    ax.set_title('Visualisasi Cluster Provinsi (Analisis Komponen Utama - PCA 2D)',
-                 fontsize=15, fontweight='bold', pad=20, color='#1E293B')
-    ax.set_xlabel(f'PC1 ({explained[0]:.1f}% variance)', fontsize=12, labelpad=10)
-    ax.set_ylabel(f'PC2 ({explained[1]:.1f}% variance)', fontsize=12, labelpad=10)
-    ax.legend(loc='upper right', fontsize=10, frameon=True, facecolor='white', edgecolor='#E2E8F0', shadow=True)
-    ax.grid(True, linestyle=':', alpha=0.4, color='#CBD5E1')
+    ax_pca.set_title('Grafik Sebaran Hasil Reduksi Dimensi PCA', fontsize=13, fontweight='bold', pad=15)
+    ax_pca.set_xlabel(f'PC1 ({explained[0]:.1f}% Variance)', fontsize=10, labelpad=8)
+    ax_pca.set_ylabel(f'PC2 ({explained[1]:.1f}% Variance)', fontsize=10, labelpad=8)
+    ax_pca.legend(loc='upper right', fontsize=9, frameon=True, facecolor='white', edgecolor='#E2E8F0', shadow=True)
+    ax_pca.grid(True, linestyle='--', alpha=0.7, color='#CBD5E1', linewidth=0.8)
     plt.tight_layout()
-    st.pyplot(fig)
+    st.pyplot(fig_pca)
     plt.close()
 
     st.markdown("---")
-    st.subheader("Heatmap Profil Cluster")
-
+    
+    # Heatmap visualisasi perbedaan rata-rata fitur masing-masing cluster
+    st.subheader("Heatmap Perbedaan Karakteristik Antar Cluster")
     cluster_profile_raw = df.groupby('cluster')[fitur].mean()
     cluster_profile_norm = (cluster_profile_raw - cluster_profile_raw.min()) / \
                            (cluster_profile_raw.max() - cluster_profile_raw.min())
     cluster_profile_norm.index = [f"{label_map[i]}" for i in cluster_profile_norm.index]
-    fitur_label_short = ['Jml Siswa', 'Jml Guru', 'Rasio S/G', 'Mengulang',
-                         'Putus Sekolah', 'Rombel', 'Kelas Baik (%)']
+    # Menggunakan label fitur global
+    pass
 
-    fig, ax = plt.subplots(figsize=(11, 4.5), facecolor='none')
-    sns.heatmap(cluster_profile_norm, annot=cluster_profile_raw.round(1), fmt='.1f',
-                cmap='YlGnBu', linewidths=1.5, linecolor='white', ax=ax,
-                xticklabels=fitur_label_short,
-                cbar_kws={'label': 'Tingkat Relatif Indikator'},
-                annot_kws={'size': 10, 'weight': 'bold'})
-    ax.set_title('Profil Karakteristik Setiap Cluster (Rata-rata Nilai Aktual)',
-                 fontsize=13, fontweight='bold', pad=20, color='#1E293B')
-    ax.set_ylabel('Cluster', fontsize=11, labelpad=10)
-    plt.xticks(rotation=15, ha='right', fontsize=10)
-    plt.yticks(rotation=0, fontsize=10)
+    fig_heat, ax_heat = plt.subplots(figsize=(11, 4.5), facecolor='none')
+    sns.heatmap(
+        cluster_profile_norm, annot=cluster_profile_raw.round(1), fmt='.1f',
+        cmap='YlGnBu', linewidths=1.5, linecolor='white', ax=ax_heat,
+        xticklabels=fitur_label_short,
+        cbar_kws={'label': 'Tingkat Relatif Indikator'},
+        annot_kws={'size': 10, 'weight': 'bold'}
+    )
+    ax_heat.set_title('Profil Karakteristik Setiap Cluster (Rata-rata Nilai Aktual)', fontsize=12, fontweight='bold', pad=15)
+    ax_heat.set_ylabel('Cluster', fontsize=10, labelpad=10)
+    plt.xticks(rotation=15, ha='right', fontsize=9)
+    plt.yticks(rotation=0, fontsize=9)
     plt.tight_layout()
-    st.pyplot(fig)
+    st.pyplot(fig_heat)
     plt.close()
 
-    st.markdown("---")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("Jumlah Provinsi per Cluster")
-        counts = df.groupby('label_cluster').size().reset_index(name='Jumlah')
-        fig, ax = plt.subplots(figsize=(6, 4), facecolor='none')
-        bars = ax.bar(range(len(counts)), counts['Jumlah'],
-                      color=colors_list[:len(counts)], edgecolor='none', width=0.45)
-        for bar, val in zip(bars, counts['Jumlah']):
-            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5,
-                    str(val), ha='center', fontweight='bold', color='#1E293B', fontsize=10)
-        ax.set_xticks(range(len(counts)))
-        ax.set_xticklabels([c.split('–')[0].strip() for c in counts['label_cluster']], rotation=0, fontsize=10)
-        ax.set_ylabel('Jumlah Provinsi', fontsize=10)
-        ax.grid(axis='y', linestyle=':', alpha=0.5, color='#CBD5E1')
-        plt.tight_layout()
-        st.pyplot(fig)
-        plt.close()
-
-    with col2:
-        st.subheader("Proporsi Distribusi Cluster")
-        fig, ax = plt.subplots(figsize=(6, 4), facecolor='none')
-        sizes = df['cluster'].value_counts().sort_index()
-        labels = [f"{label_map[i]}\n({v} prov.)" for i, v in sizes.items()]
-        wedges, texts, autotexts = ax.pie(sizes, labels=labels, colors=colors_list[:len(sizes)],
-                                          autopct='%1.1f%%', startangle=140, pctdistance=0.75,
-                                          wedgeprops=dict(width=0.4, edgecolor='white', linewidth=2))
-        plt.setp(texts, size=9, weight="bold", color="#475569")
-        plt.setp(autotexts, size=9, weight="bold", color="white")
-        plt.tight_layout()
-        st.pyplot(fig)
-        plt.close()
-
-# ============================================================
-# TAB 4 — DETAIL PROVINSI
-# ============================================================
-with tab4:
-    st.subheader("Detail Anggota Setiap Cluster")
+elif menu == "Detail & Pencarian":
+    st.subheader("Pencarian Provinsi dan Detail Data Cluster")
 
     filter_cluster = st.selectbox(
-        "Pilih Cluster untuk ditampilkan:",
+        "Pilih Filter Cluster:",
         options=['Semua'] + [f"{label_map[i]} – {label_desc.get(i,'')}" for i in range(k_value)]
     )
 
-    search = st.text_input("Cari provinsi:", placeholder="Contoh: Papua, Jawa, Bali...")
+    search = st.text_input("Ketik Nama Provinsi:", placeholder="Contoh: Papua, Jawa, Bali...")
 
     df_show = df[['provinsi', 'label_cluster'] + fitur].copy()
     df_show.columns = ['Provinsi', 'Cluster'] + fitur_label_short
@@ -539,55 +803,50 @@ with tab4:
     if search:
         df_show = df_show[df_show['Provinsi'].str.contains(search, case=False)]
 
-    st.dataframe(df_show.style.background_gradient(subset=fitur_label_short, cmap='RdYlGn'),
-                 use_container_width=True)
+    st.dataframe(df_show, width='stretch')
     st.caption(f"Menampilkan {len(df_show)} dari {len(df)} provinsi")
 
     st.markdown("---")
-    st.subheader("Statistik per Cluster")
+    st.subheader("Statistik Ringkas Per Cluster")
     for c in range(k_value):
         subset = df[df['cluster'] == c]
         with st.expander(f"{label_map[c]} – {label_desc.get(c, '')} ({len(subset)} provinsi)"):
             stat = subset[fitur].describe().round(2)
             stat.columns = fitur_label_short
-            st.dataframe(stat, use_container_width=True)
-            st.write("**Anggota:**", ", ".join(subset['provinsi'].values))
+            st.dataframe(stat, width='stretch')
+            st.write("**Daftar Provinsi Anggota:**", ", ".join(subset['provinsi'].values))
 
-# ============================================================
-# TAB 5 — UNDUH HASIL
-# ============================================================
-with tab5:
-    st.subheader("Unduh Hasil Clustering")
-    st.markdown("Unduh hasil analisis dalam format CSV untuk keperluan lebih lanjut.")
+elif menu == "Ekspor Data":
+    st.subheader("Ekspor Hasil Analisis K-Means")
+    st.markdown("Gunakan menu ini untuk mengunduh hasil pembagian cluster provinsi ke dalam format berkas CSV.")
 
     df_download = df[['provinsi', 'cluster', 'label_cluster'] + fitur].copy()
     df_download.columns = ['Provinsi', 'No Cluster', 'Label Cluster'] + fitur_label_short
 
     csv = df_download.to_csv(index=False).encode('utf-8')
     st.download_button(
-        label="Download Hasil Clustering (CSV)",
+        label="Download Hasil Analisis (CSV)",
         data=csv,
         file_name="hasil_clustering_pendidikan_indonesia.csv",
         mime="text/csv"
     )
 
     st.markdown("---")
-    st.subheader("Preview Data yang Akan Diunduh")
-    st.dataframe(df_download, use_container_width=True)
+    st.subheader("Pratinjau Data (Preview)")
+    st.dataframe(df_download, width='stretch')
 
     st.markdown("---")
-    st.subheader("Ringkasan Evaluasi Model")
+    st.subheader("Evaluasi Akhir Model Model K-Means")
     col1, col2, col3 = st.columns(3)
-    col1.metric("Silhouette Score", f"{sil_score_val:.4f}")
-    col2.metric("Jumlah Cluster", k_value)
-    col3.metric("Total Provinsi", len(df))
+    col1.metric("Silhouette Score (Ketepatan)", f"{sil_score_val:.4f}")
+    col2.metric("Jumlah Cluster Terpilih (K)", k_value)
+    col3.metric("Total Provinsi Teranalisis", len(df))
 
-# ============================================================
-# FOOTER
-# ============================================================
+
+# Footer halaman utama
 st.markdown("""
 <div class="footer">
     Analisis Pemerataan Pendidikan Dasar Antar Provinsi di Indonesia Menggunakan K-Means Clustering<br>
-    Program Studi Teknik Informatika — Fakultas Teknik, Komputer, dan Desain — Universitas Nusaputra 2026
+    Teknik Informatika 2026 — Dikembangkan oleh Kelompok 2
 </div>
 """, unsafe_allow_html=True)
