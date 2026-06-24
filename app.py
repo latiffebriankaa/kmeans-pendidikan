@@ -35,12 +35,12 @@ st.markdown("""
     
     /* Desain sidebar kiri */
     section[data-testid="stSidebar"] {
-        background-color: #F1F5F9 !important;
-        border-right: 1px solid #E2E8F0 !important;
+        background-color: #E2E8F0 !important;
+        border-right: 1px solid #CBD5E1 !important;
     }
     
     section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {
-        color: #334155 !important;
+        color: #1E293B !important;
     }
     
     /* Header menu di sidebar */
@@ -48,7 +48,7 @@ st.markdown("""
         text-align: center;
         padding: 25px 10px;
         margin-bottom: 25px;
-        border-bottom: 1px solid #E2E8F0;
+        border-bottom: 1px solid #CBD5E1;
     }
     
     .group-badge-sidebar {
@@ -72,7 +72,7 @@ st.markdown("""
     
     div[data-testid="stSidebar"] div[role="radiogroup"] label {
         background-color: #FFFFFF !important;
-        border: 1px solid #E2E8F0 !important;
+        border: 1px solid #CBD5E1 !important;
         border-radius: 12px !important;
         padding: 10px 14px !important;
         transition: all 0.2s ease-in-out !important;
@@ -85,19 +85,19 @@ st.markdown("""
     
     div[data-testid="stSidebar"] div[role="radiogroup"] label:hover {
         background-color: #F8FAFC !important;
-        border-color: #CBD5E1 !important;
+        border-color: #94A3B8 !important;
         transform: translateX(3px);
     }
     
     /* Style saat menu aktif/dipilih */
     div[data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) {
-        background-color: #EEF2FF !important;
-        border-color: #6366F1 !important;
-        box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.08) !important;
+        background-color: #4F46E5 !important;
+        border-color: #4F46E5 !important;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2) !important;
     }
     
     div[data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) p {
-        color: #4F46E5 !important;
+        color: #FFFFFF !important;
         font-weight: 700 !important;
     }
     
@@ -148,6 +148,11 @@ st.markdown("""
         box-shadow: 0 6px 15px 0 rgba(0, 0, 0, 0.04);
         border-color: #CBD5E1;
     }
+    
+    .card-blue { border-top: 4px solid #0284C7 !important; }
+    .card-teal { border-top: 4px solid #0D9488 !important; }
+    .card-indigo { border-top: 4px solid #6366F1 !important; }
+    .card-amber { border-top: 4px solid #D97706 !important; }
     
     .metric-title {
         font-size: 0.78rem;
@@ -448,6 +453,17 @@ with st.sidebar:
         st.success("Data Sukses Terupload")
 
     st.markdown("---")
+    st.markdown("### Pengaturan Visual")
+    color_theme = st.selectbox(
+        "Palet Warna Grafik:",
+        options=["Modern Tech", "Ocean Breeze", "Sunset Glow", "Classic Slate"]
+    )
+    layout_style = st.radio(
+        "Tata Letak Kartu Cluster:",
+        options=["Grid (Sejajar)", "List (Vertikal)"]
+    )
+
+    st.markdown("---")
     st.markdown("### Informasi")
     st.info("**Model:** K-Means Clustering\n\n**Tingkat:** Pendidikan Dasar SD/MI\n\n**Sumber:** Kemendikbudristek")
     
@@ -470,8 +486,14 @@ df['norm_prov'] = df['provinsi'].apply(normalize_province_name)
 df['lon'] = df['norm_prov'].map(lambda x: normalized_coords.get(x, (np.nan, np.nan))[0])
 df['lat'] = df['norm_prov'].map(lambda x: normalized_coords.get(x, (np.nan, np.nan))[1])
 
-# Daftar warna visualisasi cluster (Sky Blue, Teal, Red, Amber, Purple, dst)
-colors_list = ['#0284C7', '#0D9488', '#DC2626', '#D97706', '#7C3AED', '#EC4899', '#2563EB', '#475569']
+# Definisi palet warna grafis berdasarkan pilihan tema
+themes_dict = {
+    "Modern Tech": ['#4F46E5', '#0D9488', '#0284C7', '#D97706', '#7C3AED', '#EC4899', '#2563EB', '#475569'],
+    "Ocean Breeze": ['#0284C7', '#0D9488', '#10B981', '#06B6D4', '#3B82F6', '#64748B', '#0F172A', '#94A3B8'],
+    "Sunset Glow": ['#7C3AED', '#EC4899', '#EF4444', '#F59E0B', '#10B981', '#6366F1', '#3B82F6', '#64748B'],
+    "Classic Slate": ['#475569', '#0284C7', '#10B981', '#D97706', '#EF4444', '#6366F1', '#8B5CF6', '#EC4899']
+}
+colors_list = themes_dict.get(color_theme, themes_dict["Modern Tech"])
 
 # Injeksi CSS dinamis untuk mewarnai cluster cards (transparansi 5%)
 dynamic_css = ""
@@ -540,22 +562,22 @@ if menu == "Dashboard Ringkasan":
     # Kartu indikator metrik utama
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.markdown(f"""<div class="metric-card-wrapper">
+        st.markdown(f"""<div class="metric-card-wrapper card-blue">
             <div class="metric-title">Total Provinsi</div>
             <div class="metric-value">{len(df)}</div>
         </div>""", unsafe_allow_html=True)
     with col2:
-        st.markdown(f"""<div class="metric-card-wrapper">
+        st.markdown(f"""<div class="metric-card-wrapper card-teal">
             <div class="metric-title">Jumlah Cluster (K)</div>
             <div class="metric-value">{k_value}</div>
         </div>""", unsafe_allow_html=True)
     with col3:
-        st.markdown(f"""<div class="metric-card-wrapper">
+        st.markdown(f"""<div class="metric-card-wrapper card-indigo">
             <div class="metric-title">Silhouette Score</div>
             <div class="metric-value">{sil_score_val:.3f}</div>
         </div>""", unsafe_allow_html=True)
     with col4:
-        st.markdown(f"""<div class="metric-card-wrapper">
+        st.markdown(f"""<div class="metric-card-wrapper card-amber">
             <div class="metric-title">PCA Explained Variance</div>
             <div class="metric-value">{sum(explained):.1f}%</div>
         </div>""", unsafe_allow_html=True)
@@ -564,11 +586,23 @@ if menu == "Dashboard Ringkasan":
     st.subheader("Pembagian Provinsi Per Cluster")
 
     # Kartu pembagian kelompok cluster
-    cols = st.columns(min(k_value, 3))
-    for i in range(k_value):
-        subset = df[df['cluster'] == i]
-        card_class = f'card-cluster-{i}' if i < 8 else 'card-cluster-generic'
-        with cols[i % 3]:
+    if layout_style == "Grid (Sejajar)":
+        cols = st.columns(min(k_value, 3))
+        for i in range(k_value):
+            subset = df[df['cluster'] == i]
+            card_class = f'card-cluster-{i}' if i < 8 else 'card-cluster-generic'
+            with cols[i % 3]:
+                prov_list = "  •  ".join(subset['provinsi'].values)
+                st.markdown(f"""
+                <div class="cluster-card {card_class}">
+                    <div class="cluster-card-title" style="color: {colors_list[i]};">{label_map[i]} — {label_desc.get(i, 'Grup')}</div>
+                    <div class="cluster-card-count">{len(subset)} Provinsi</div>
+                    <div class="cluster-card-members"><strong>Anggota:</strong><br>{prov_list}</div>
+                </div>""", unsafe_allow_html=True)
+    else:
+        for i in range(k_value):
+            subset = df[df['cluster'] == i]
+            card_class = f'card-cluster-{i}' if i < 8 else 'card-cluster-generic'
             prov_list = "  •  ".join(subset['provinsi'].values)
             st.markdown(f"""
             <div class="cluster-card {card_class}">
@@ -593,7 +627,7 @@ if menu == "Dashboard Ringkasan":
             'Rasio Siswa/Guru': cluster_profile['Rasio Siswa/Guru'],
             'Angka Mengulang (%)': cluster_profile['Angka Mengulang (%)'],
             'Angka Putus Sekolah (%)': cluster_profile['Angka Putus Sekolah (%)'],
-            'Kondisi Kelas Baik (%)': cluster_profile['Kondisi Kelas (%)']
+            'Kondisi Kelas Baik (%)': cluster_profile['Kondisi Kelas Baik (%)']
         })
         
         vis_df.plot(kind='bar', ax=ax_profile, color=colors_list[:4], width=0.75)
@@ -623,7 +657,7 @@ if menu == "Dashboard Ringkasan":
         plt.close()
         
     st.subheader("Detail Profil Rata-rata per Indikator")
-    st.dataframe(cluster_profile.style.background_gradient(cmap='YlGnBu', axis=0), width='stretch')
+    st.dataframe(cluster_profile.style.background_gradient(cmap='GnBu', axis=0), width='stretch')
 
 elif menu == "Analisis Elbow & K":
     st.subheader("Evaluasi K-Means: Penentuan Nilai Cluster (K) Optimal")
@@ -709,7 +743,7 @@ elif menu == "Visualisasi Spasial & PCA":
         ax_map.set_xlim(94, 142)
         ax_map.set_ylim(-11.5, 6.5)
         
-        ax_map.legend(loc='lower left', fontsize=9, frameon=True, facecolor='white', edgecolor='#E2E8F0', shadow=True)
+        ax_map.legend(loc='lower left', fontsize=9, frameon=True, facecolor='white', edgecolor='#E2E8F0', shadow=False)
         ax_map.grid(True, linestyle='--', alpha=0.7, color='#CBD5E1', linewidth=0.8)
         plt.tight_layout()
         st.pyplot(fig_map)
@@ -743,16 +777,21 @@ elif menu == "Visualisasi Spasial & PCA":
     pca_temp = PCA(n_components=2, random_state=42)
     pca_temp.fit(X_scaled)
     centroids_pca = pca_temp.transform(kmeans.cluster_centers_)
+    # Outline/glow effect untuk centroid model
     ax_pca.scatter(
         centroids_pca[:, 0], centroids_pca[:, 1],
-        c='#0F172A', marker='X', s=350, zorder=5, label='Centroid Model',
-        edgecolors='white', linewidth=1.5
+        c='white', marker='o', s=450, zorder=4, alpha=1.0
+    )
+    ax_pca.scatter(
+        centroids_pca[:, 0], centroids_pca[:, 1],
+        c='#0F172A', marker='X', s=250, zorder=5, label='Centroid Model',
+        edgecolors='white', linewidth=1.0
     )
 
     ax_pca.set_title('Grafik Sebaran Hasil Reduksi Dimensi PCA', fontsize=13, fontweight='bold', pad=15)
     ax_pca.set_xlabel(f'PC1 ({explained[0]:.1f}% Variance)', fontsize=10, labelpad=8)
     ax_pca.set_ylabel(f'PC2 ({explained[1]:.1f}% Variance)', fontsize=10, labelpad=8)
-    ax_pca.legend(loc='upper right', fontsize=9, frameon=True, facecolor='white', edgecolor='#E2E8F0', shadow=True)
+    ax_pca.legend(loc='upper right', fontsize=9, frameon=True, facecolor='white', edgecolor='#E2E8F0', shadow=False)
     ax_pca.grid(True, linestyle='--', alpha=0.7, color='#CBD5E1', linewidth=0.8)
     plt.tight_layout()
     st.pyplot(fig_pca)
@@ -772,7 +811,7 @@ elif menu == "Visualisasi Spasial & PCA":
     fig_heat, ax_heat = plt.subplots(figsize=(11, 4.5), facecolor='none')
     sns.heatmap(
         cluster_profile_norm, annot=cluster_profile_raw.round(1), fmt='.1f',
-        cmap='YlGnBu', linewidths=1.5, linecolor='white', ax=ax_heat,
+        cmap='GnBu', linewidths=1.5, linecolor='white', ax=ax_heat,
         xticklabels=fitur_label_short,
         cbar_kws={'label': 'Tingkat Relatif Indikator'},
         annot_kws={'size': 10, 'weight': 'bold'}
