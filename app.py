@@ -12,6 +12,22 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import silhouette_score, silhouette_samples
 from sklearn.decomposition import PCA
 
+# Configure Matplotlib styling globally for a clean, modern look
+plt.rcParams['figure.facecolor'] = 'none'
+plt.rcParams['axes.facecolor'] = 'none'
+plt.rcParams['font.family'] = 'sans-serif'
+plt.rcParams['text.color'] = '#1E293B'
+plt.rcParams['axes.labelcolor'] = '#475569'
+plt.rcParams['xtick.color'] = '#475569'
+plt.rcParams['ytick.color'] = '#475569'
+plt.rcParams['grid.color'] = '#E2E8F0'
+plt.rcParams['grid.linestyle'] = '--'
+plt.rcParams['grid.linewidth'] = 0.5
+plt.rcParams['axes.edgecolor'] = '#E2E8F0'
+plt.rcParams['axes.linewidth'] = 0.8
+plt.rcParams['axes.spines.top'] = False
+plt.rcParams['axes.spines.right'] = False
+
 # ============================================================
 # KONFIGURASI HALAMAN
 # ============================================================
@@ -27,44 +43,137 @@ st.set_page_config(
 # ============================================================
 st.markdown("""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+    
+    /* Global Styles */
+    html, body, [class*="css"], .stApp {
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+    }
+    
+    /* Main Title Styling */
     .main-title {
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: #1a237e;
+        font-size: 2.1rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #3B82F6 0%, #4F46E5 50%, #7C3AED 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
         text-align: center;
-        padding: 10px 0 5px 0;
+        padding: 15px 0 5px 0;
+        margin-bottom: 5px;
+        letter-spacing: -0.5px;
     }
+    
     .sub-title {
-        font-size: 1rem;
-        color: #546e7a;
+        font-size: 1.05rem;
+        font-weight: 500;
+        color: #64748B;
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 25px;
     }
-    .metric-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 12px;
-        padding: 18px;
-        color: white;
+    
+    /* Metric Cards */
+    .metric-card-wrapper {
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid #E2E8F0;
+        border-radius: 16px;
+        padding: 20px;
         text-align: center;
-        margin-bottom: 10px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        margin-bottom: 15px;
+        backdrop-filter: blur(10px);
     }
-    .metric-card h3 { font-size: 2rem; margin: 0; }
-    .metric-card p  { font-size: 0.85rem; margin: 4px 0 0 0; opacity: 0.9; }
+    
+    .metric-card-wrapper:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.08);
+        border-color: #CBD5E1;
+    }
+    
+    .metric-title {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #64748B;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+    
+    .metric-value {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #1E293B;
+        line-height: 1.1;
+    }
+    
+    /* Cluster Cards */
     .cluster-card {
-        border-radius: 10px;
-        padding: 15px;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+        border: 1px solid transparent;
+        transition: transform 0.2s ease;
+    }
+    
+    .cluster-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .card-cluster-0 {
+        background-color: #ECFDF5;
+        border-left: 6px solid #10B981;
+        border-color: #D1FAE5;
+    }
+    .card-cluster-1 {
+        background-color: #FFFBEB;
+        border-left: 6px solid #F59E0B;
+        border-color: #FEF3C7;
+    }
+    .card-cluster-2 {
+        background-color: #FEF2F2;
+        border-left: 6px solid #EF4444;
+        border-color: #FEE2E2;
+    }
+    
+    .card-cluster-generic {
+        background-color: #F8FAFC;
+        border-left: 6px solid #6366F1;
+        border-color: #E2E8F0;
+    }
+    
+    .cluster-card-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1E293B;
+        margin-bottom: 6px;
+    }
+    
+    .cluster-card-count {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #0F172A;
         margin-bottom: 12px;
     }
-    .card-blue   { background-color: #e3f2fd; border-left: 5px solid #2196F3; }
-    .card-green  { background-color: #e8f5e9; border-left: 5px solid #4CAF50; }
-    .card-orange { background-color: #fff3e0; border-left: 5px solid #FF5722; }
+    
+    .cluster-card-members {
+        font-size: 0.8rem;
+        color: #475569;
+        line-height: 1.5;
+        background: rgba(255, 255, 255, 0.5);
+        padding: 10px;
+        border-radius: 8px;
+    }
+    
+    /* Footer Styling */
     .footer {
         text-align: center;
-        color: #90a4ae;
-        font-size: 0.8rem;
-        padding: 20px 0 5px 0;
-        border-top: 1px solid #eceff1;
-        margin-top: 30px;
+        color: #94A3B8;
+        font-size: 0.85rem;
+        padding: 25px 0 10px 0;
+        border-top: 1px solid #F1F5F9;
+        margin-top: 50px;
+        font-weight: 500;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -145,23 +254,30 @@ def run_clustering(df, k):
 # SIDEBAR
 # ============================================================
 with st.sidebar:
-    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/NUSAPUTRA_LOGO.png/320px-NUSAPUTRA_LOGO.png",
-             width=160)
-    st.markdown("---")
-    st.markdown("### ⚙️ Pengaturan")
+    st.markdown("""
+        <div style="text-align: center; margin-bottom: 25px; padding: 12px; background: rgba(255, 255, 255, 0.7); border-radius: 16px; border: 1px solid #E2E8F0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/NUSAPUTRA_LOGO.png/320px-NUSAPUTRA_LOGO.png" width="140" style="display: block; margin: 0 auto;"/>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("### ⚙️ Pengaturan Model")
+    k_value = st.slider("Jumlah Cluster (K)", min_value=2, max_value=8, value=3, step=1, help="Tentukan jumlah cluster untuk analisis K-Means.")
 
-    k_value = st.slider("Jumlah Cluster (K)", min_value=2, max_value=8, value=3, step=1)
-
-    st.markdown("---")
     st.markdown("### 📂 Upload Dataset")
     uploaded = st.file_uploader("Upload file CSV (opsional)", type=["csv"])
-    st.caption("Jika tidak diupload, data simulasi akan digunakan.")
+    if not uploaded:
+        st.info("💡 **Data Default Aktif**\nMenggunakan simulasi data 38 Provinsi Indonesia 2023-2024.")
+    else:
+        st.success("✅ **Data Sukses Terupload**")
 
-    st.markdown("---")
     st.markdown("### 📌 Informasi")
     st.info("**Algoritma:** K-Means Clustering\n\n**Data:** Pendidikan SD Indonesia 2023–2024\n\n**Sumber:** Kemendikbudristek")
-    st.markdown("---")
-    st.caption("© 2026 — Universitas Nusaputra\nTeknik Informatika")
+    
+    st.markdown("""
+        <div style="text-align: center; color: #94A3B8; font-size: 0.75rem; margin-top: 30px; border-top: 1px solid #E2E8F0; padding-top: 15px;">
+            © 2026 — Universitas Nusaputra<br>Teknik Informatika
+        </div>
+    """, unsafe_allow_html=True)
 
 # ============================================================
 # LOAD DATA
@@ -181,7 +297,7 @@ label_desc  = {
     2: "Perlu Perhatian",
     3: "Grup D", 4: "Grup E", 5: "Grup F", 6: "Grup G", 7: "Grup H"
 }
-colors_list = ['#2196F3', '#4CAF50', '#FF5722', '#9C27B0', '#FF9800', '#00BCD4', '#795548', '#607D8B']
+colors_list = ['#10B981', '#F59E0B', '#EF4444', '#6366F1', '#EC4899', '#06B6D4', '#8B5CF6', '#64748B']
 
 df['label_cluster'] = df['cluster'].apply(
     lambda x: f"{label_map[x]} – {label_desc.get(x, 'Grup ' + chr(65+x))}"
@@ -198,11 +314,11 @@ st.markdown("---")
 # TAB NAVIGASI
 # ============================================================
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "🏠 Dashboard",
-    "📊 Elbow & Evaluasi",
-    "🗺️ Visualisasi Cluster",
-    "📋 Detail Provinsi",
-    "📥 Unduh Hasil"
+    "🏠 Dashboard Ringkasan",
+    "📈 Analisis Elbow",
+    "🗺️ Visualisasi Spasial 2D",
+    "🔍 Detail & Pencarian",
+    "📥 Ekspor Data"
 ])
 
 # ============================================================
@@ -213,35 +329,42 @@ with tab1:
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.markdown(f"""<div class="metric-card">
-            <h3>{len(df)}</h3><p>Total Provinsi</p></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="metric-card-wrapper">
+            <div class="metric-title">👥 Total Provinsi</div>
+            <div class="metric-value">{len(df)}</div>
+        </div>""", unsafe_allow_html=True)
     with col2:
-        st.markdown(f"""<div class="metric-card">
-            <h3>{k_value}</h3><p>Jumlah Cluster</p></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="metric-card-wrapper">
+            <div class="metric-title">🎯 Jumlah Cluster</div>
+            <div class="metric-value">{k_value}</div>
+        </div>""", unsafe_allow_html=True)
     with col3:
-        st.markdown(f"""<div class="metric-card">
-            <h3>{sil_score_val:.3f}</h3><p>Silhouette Score</p></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="metric-card-wrapper">
+            <div class="metric-title">📊 Silhouette Score</div>
+            <div class="metric-value">{sil_score_val:.3f}</div>
+        </div>""", unsafe_allow_html=True)
     with col4:
-        st.markdown(f"""<div class="metric-card">
-            <h3>{sum(explained):.1f}%</h3><p>PCA Variance Explained</p></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="metric-card-wrapper">
+            <div class="metric-title">⚡ PCA Explained Var</div>
+            <div class="metric-value">{sum(explained):.1f}%</div>
+        </div>""", unsafe_allow_html=True)
 
     st.markdown("---")
     st.subheader("Distribusi Provinsi per Cluster")
 
-    card_class = ['card-blue', 'card-green', 'card-orange']
-    icons = ['🔵', '🟢', '🔴', '🟣', '🟠', '🔵', '🟤', '⚫']
+    icons = ['🟢', '🟡', '🔴', '🟣', '🔵', '🟠', '🟤', '⚫']
 
     cols = st.columns(min(k_value, 3))
     for i in range(k_value):
         subset = df[df['cluster'] == i]
-        card_c = card_class[i] if i < 3 else 'card-blue'
+        card_class = f'card-cluster-{i}' if i < 3 else 'card-cluster-generic'
         with cols[i % 3]:
             prov_list = "  •  ".join(subset['provinsi'].values)
             st.markdown(f"""
-            <div class="cluster-card {card_c}">
-                <strong>{icons[i]} {label_map[i]} — {label_desc.get(i, 'Grup')}</strong><br>
-                <span style="font-size:1.4rem; font-weight:700">{len(subset)} Provinsi</span><br><br>
-                <span style="font-size:0.78rem; color:#555">{prov_list}</span>
+            <div class="cluster-card {card_class}">
+                <div class="cluster-card-title">{icons[i]} {label_map[i]} — {label_desc.get(i, 'Grup')}</div>
+                <div class="cluster-card-count">{len(subset)} Provinsi</div>
+                <div class="cluster-card-members"><strong>Anggota:</strong><br>{prov_list}</div>
             </div>""", unsafe_allow_html=True)
 
     st.markdown("---")
@@ -261,27 +384,27 @@ with tab2:
     col1, col2 = st.columns(2)
 
     with col1:
-        fig, ax = plt.subplots(figsize=(6, 4))
-        ax.plot(range(2, 11), wcss_list, 'bo-', linewidth=2, markersize=8)
-        ax.axvline(x=k_value, color='red', linestyle='--', linewidth=1.5, label=f'K={k_value} (dipilih)')
-        ax.set_title('Elbow Method', fontsize=12, fontweight='bold')
-        ax.set_xlabel('Jumlah Cluster (K)')
-        ax.set_ylabel('WCSS')
-        ax.legend()
-        ax.grid(True, alpha=0.3)
+        fig, ax = plt.subplots(figsize=(6, 4), facecolor='none')
+        ax.plot(range(2, 11), wcss_list, color='#4F46E5', marker='o', linewidth=2, markersize=8, markerfacecolor='#4F46E5', markeredgecolor='white', markeredgewidth=1.5)
+        ax.axvline(x=k_value, color='#EF4444', linestyle='--', linewidth=1.5, label=f'K={k_value} (dipilih)')
+        ax.set_title('Elbow Method', fontsize=12, fontweight='bold', pad=15, color='#1E293B')
+        ax.set_xlabel('Jumlah Cluster (K)', fontsize=10, labelpad=8)
+        ax.set_ylabel('WCSS', fontsize=10, labelpad=8)
+        ax.legend(frameon=True, facecolor='white', edgecolor='#E2E8F0')
+        ax.grid(True, which='both', linestyle=':', alpha=0.5, color='#CBD5E1')
         plt.tight_layout()
         st.pyplot(fig)
         plt.close()
 
     with col2:
-        fig, ax = plt.subplots(figsize=(6, 4))
-        ax.plot(range(2, 11), sil_list, 'gs-', linewidth=2, markersize=8)
-        ax.axvline(x=k_value, color='red', linestyle='--', linewidth=1.5, label=f'K={k_value} (dipilih)')
-        ax.set_title('Silhouette Score vs K', fontsize=12, fontweight='bold')
-        ax.set_xlabel('Jumlah Cluster (K)')
-        ax.set_ylabel('Silhouette Score')
-        ax.legend()
-        ax.grid(True, alpha=0.3)
+        fig, ax = plt.subplots(figsize=(6, 4), facecolor='none')
+        ax.plot(range(2, 11), sil_list, color='#10B981', marker='s', linewidth=2, markersize=8, markerfacecolor='#10B981', markeredgecolor='white', markeredgewidth=1.5)
+        ax.axvline(x=k_value, color='#EF4444', linestyle='--', linewidth=1.5, label=f'K={k_value} (dipilih)')
+        ax.set_title('Silhouette Score vs K', fontsize=12, fontweight='bold', pad=15, color='#1E293B')
+        ax.set_xlabel('Jumlah Cluster (K)', fontsize=10, labelpad=8)
+        ax.set_ylabel('Silhouette Score', fontsize=10, labelpad=8)
+        ax.legend(frameon=True, facecolor='white', edgecolor='#E2E8F0')
+        ax.grid(True, which='both', linestyle=':', alpha=0.5, color='#CBD5E1')
         plt.tight_layout()
         st.pyplot(fig)
         plt.close()
@@ -312,28 +435,30 @@ with tab2:
 with tab3:
     st.subheader("Scatter Plot PCA 2D")
 
-    fig, ax = plt.subplots(figsize=(12, 8))
+    fig, ax = plt.subplots(figsize=(12, 8), facecolor='none')
     for c in range(k_value):
         mask = df['cluster'] == c
         ax.scatter(X_pca[mask, 0], X_pca[mask, 1],
                    c=colors_list[c], label=f"{label_map[c]} – {label_desc.get(c, '')}",
-                   s=130, alpha=0.85, edgecolors='white', linewidth=0.8)
+                   s=180, alpha=0.9, edgecolors='white', linewidth=1.2)
         for i, row in df[mask].iterrows():
             ax.annotate(row['provinsi'], (X_pca[i, 0], X_pca[i, 1]),
-                        fontsize=7.5, alpha=0.8, xytext=(4, 4), textcoords='offset points')
+                        fontsize=9, weight='bold', alpha=0.85, 
+                        xytext=(5, 5), textcoords='offset points')
 
     pca_temp = PCA(n_components=2, random_state=42)
     pca_temp.fit(X_scaled)
     centroids_pca = pca_temp.transform(kmeans.cluster_centers_)
     ax.scatter(centroids_pca[:, 0], centroids_pca[:, 1],
-               c='black', marker='X', s=250, zorder=5, label='Centroid')
+               c='#0F172A', marker='X', s=350, zorder=5, label='Centroid Model',
+               edgecolors='white', linewidth=1.5)
 
-    ax.set_title('Hasil K-Means Clustering — 38 Provinsi Indonesia\nBerdasarkan Indikator Pendidikan Dasar',
-                 fontsize=13, fontweight='bold')
-    ax.set_xlabel(f'PC1 ({explained[0]:.1f}% variance)', fontsize=11)
-    ax.set_ylabel(f'PC2 ({explained[1]:.1f}% variance)', fontsize=11)
-    ax.legend(loc='upper right', fontsize=9)
-    ax.grid(True, alpha=0.3)
+    ax.set_title('Visualisasi Cluster Provinsi (Analisis Komponen Utama - PCA 2D)',
+                 fontsize=15, fontweight='bold', pad=20, color='#1E293B')
+    ax.set_xlabel(f'PC1 ({explained[0]:.1f}% variance)', fontsize=12, labelpad=10)
+    ax.set_ylabel(f'PC2 ({explained[1]:.1f}% variance)', fontsize=12, labelpad=10)
+    ax.legend(loc='upper right', fontsize=10, frameon=True, facecolor='white', edgecolor='#E2E8F0', shadow=True)
+    ax.grid(True, linestyle=':', alpha=0.4, color='#CBD5E1')
     plt.tight_layout()
     st.pyplot(fig)
     plt.close()
@@ -348,15 +473,17 @@ with tab3:
     fitur_label_short = ['Jml Siswa', 'Jml Guru', 'Rasio S/G', 'Mengulang',
                          'Putus Sekolah', 'Rombel', 'Kelas Baik (%)']
 
-    fig, ax = plt.subplots(figsize=(11, 4))
-    sns.heatmap(cluster_profile_norm, annot=cluster_profile_raw.round(1), fmt='g',
-                cmap='RdYlGn', linewidths=0.5, ax=ax,
+    fig, ax = plt.subplots(figsize=(11, 4.5), facecolor='none')
+    sns.heatmap(cluster_profile_norm, annot=cluster_profile_raw.round(1), fmt='.1f',
+                cmap='YlGnBu', linewidths=1.5, linecolor='white', ax=ax,
                 xticklabels=fitur_label_short,
-                cbar_kws={'label': 'Nilai Relatif'})
-    ax.set_title('Profil Karakteristik Setiap Cluster\n(Nilai dalam kotak = rata-rata aktual)',
-                 fontsize=12, fontweight='bold')
-    ax.set_ylabel('Cluster')
-    plt.xticks(rotation=25, ha='right', fontsize=9)
+                cbar_kws={'label': 'Tingkat Relatif Indikator'},
+                annot_kws={'size': 10, 'weight': 'bold'})
+    ax.set_title('Profil Karakteristik Setiap Cluster (Rata-rata Nilai Aktual)',
+                 fontsize=13, fontweight='bold', pad=20, color='#1E293B')
+    ax.set_ylabel('Cluster', fontsize=11, labelpad=10)
+    plt.xticks(rotation=15, ha='right', fontsize=10)
+    plt.yticks(rotation=0, fontsize=10)
     plt.tight_layout()
     st.pyplot(fig)
     plt.close()
@@ -366,29 +493,30 @@ with tab3:
     with col1:
         st.subheader("Jumlah Provinsi per Cluster")
         counts = df.groupby('label_cluster').size().reset_index(name='Jumlah')
-        fig, ax = plt.subplots(figsize=(6, 4))
+        fig, ax = plt.subplots(figsize=(6, 4), facecolor='none')
         bars = ax.bar(range(len(counts)), counts['Jumlah'],
-                      color=colors_list[:len(counts)], edgecolor='white', width=0.5)
+                      color=colors_list[:len(counts)], edgecolor='none', width=0.45)
         for bar, val in zip(bars, counts['Jumlah']):
-            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.1,
-                    str(val), ha='center', fontweight='bold')
+            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5,
+                    str(val), ha='center', fontweight='bold', color='#1E293B', fontsize=10)
         ax.set_xticks(range(len(counts)))
-        ax.set_xticklabels([c.split('–')[0].strip() for c in counts['label_cluster']], rotation=15)
-        ax.set_ylabel('Jumlah Provinsi')
-        ax.grid(axis='y', alpha=0.3)
+        ax.set_xticklabels([c.split('–')[0].strip() for c in counts['label_cluster']], rotation=0, fontsize=10)
+        ax.set_ylabel('Jumlah Provinsi', fontsize=10)
+        ax.grid(axis='y', linestyle=':', alpha=0.5, color='#CBD5E1')
         plt.tight_layout()
         st.pyplot(fig)
         plt.close()
 
     with col2:
-        st.subheader("Proporsi Cluster (Pie Chart)")
-        fig, ax = plt.subplots(figsize=(6, 4))
+        st.subheader("Proporsi Distribusi Cluster")
+        fig, ax = plt.subplots(figsize=(6, 4), facecolor='none')
         sizes = df['cluster'].value_counts().sort_index()
         labels = [f"{label_map[i]}\n({v} prov.)" for i, v in sizes.items()]
-        ax.pie(sizes, labels=labels, colors=colors_list[:len(sizes)],
-               autopct='%1.1f%%', startangle=140, pctdistance=0.75,
-               wedgeprops=dict(edgecolor='white', linewidth=1.5))
-        ax.set_title('Proporsi Cluster', fontweight='bold')
+        wedges, texts, autotexts = ax.pie(sizes, labels=labels, colors=colors_list[:len(sizes)],
+                                          autopct='%1.1f%%', startangle=140, pctdistance=0.75,
+                                          wedgeprops=dict(width=0.4, edgecolor='white', linewidth=2))
+        plt.setp(texts, size=9, weight="bold", color="#475569")
+        plt.setp(autotexts, size=9, weight="bold", color="white")
         plt.tight_layout()
         st.pyplot(fig)
         plt.close()
