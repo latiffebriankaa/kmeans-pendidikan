@@ -33,7 +33,6 @@ plt.rcParams['axes.spines.right'] = False
 # ============================================================
 st.set_page_config(
     page_title="Analisis Pemerataan Pendidikan Dasar Indonesia",
-    page_icon="📚",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -260,17 +259,17 @@ with st.sidebar:
         </div>
     """, unsafe_allow_html=True)
     
-    st.markdown("### ⚙️ Pengaturan Model")
+    st.markdown("### Pengaturan Model")
     k_value = st.slider("Jumlah Cluster (K)", min_value=2, max_value=8, value=3, step=1, help="Tentukan jumlah cluster untuk analisis K-Means.")
 
-    st.markdown("### 📂 Upload Dataset")
+    st.markdown("### Upload Dataset")
     uploaded = st.file_uploader("Upload file CSV (opsional)", type=["csv"])
     if not uploaded:
-        st.info("💡 **Data Default Aktif**\nMenggunakan simulasi data 38 Provinsi Indonesia 2023-2024.")
+        st.info("Info: Data simulasi default 38 Provinsi Indonesia 2023-2024 aktif.")
     else:
-        st.success("✅ **Data Sukses Terupload**")
+        st.success("Data Sukses Terupload")
 
-    st.markdown("### 📌 Informasi")
+    st.markdown("### Informasi")
     st.info("**Algoritma:** K-Means Clustering\n\n**Data:** Pendidikan SD Indonesia 2023–2024\n\n**Sumber:** Kemendikbudristek")
     
     st.markdown("""
@@ -306,7 +305,7 @@ df['label_cluster'] = df['cluster'].apply(
 # ============================================================
 # HEADER
 # ============================================================
-st.markdown('<div class="main-title">📚 Analisis Pemerataan Pendidikan Dasar Antar Provinsi di Indonesia</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">Analisis Pemerataan Pendidikan Dasar Antar Provinsi di Indonesia</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">Menggunakan Algoritma K-Means Clustering | Data Kemendikbudristek 2023–2024</div>', unsafe_allow_html=True)
 st.markdown("---")
 
@@ -314,11 +313,11 @@ st.markdown("---")
 # TAB NAVIGASI
 # ============================================================
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "🏠 Dashboard Ringkasan",
-    "📈 Analisis Elbow",
-    "🗺️ Visualisasi Spasial 2D",
-    "🔍 Detail & Pencarian",
-    "📥 Ekspor Data"
+    "Dashboard Ringkasan",
+    "Analisis Elbow",
+    "Visualisasi Spasial 2D",
+    "Detail dan Pencarian",
+    "Ekspor Data"
 ])
 
 # ============================================================
@@ -330,29 +329,27 @@ with tab1:
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.markdown(f"""<div class="metric-card-wrapper">
-            <div class="metric-title">👥 Total Provinsi</div>
+            <div class="metric-title">Total Provinsi</div>
             <div class="metric-value">{len(df)}</div>
         </div>""", unsafe_allow_html=True)
     with col2:
         st.markdown(f"""<div class="metric-card-wrapper">
-            <div class="metric-title">🎯 Jumlah Cluster</div>
+            <div class="metric-title">Jumlah Cluster</div>
             <div class="metric-value">{k_value}</div>
         </div>""", unsafe_allow_html=True)
     with col3:
         st.markdown(f"""<div class="metric-card-wrapper">
-            <div class="metric-title">📊 Silhouette Score</div>
+            <div class="metric-title">Silhouette Score</div>
             <div class="metric-value">{sil_score_val:.3f}</div>
         </div>""", unsafe_allow_html=True)
     with col4:
         st.markdown(f"""<div class="metric-card-wrapper">
-            <div class="metric-title">⚡ PCA Explained Var</div>
+            <div class="metric-title">PCA Explained Var</div>
             <div class="metric-value">{sum(explained):.1f}%</div>
         </div>""", unsafe_allow_html=True)
 
     st.markdown("---")
     st.subheader("Distribusi Provinsi per Cluster")
-
-    icons = ['🟢', '🟡', '🔴', '🟣', '🔵', '🟠', '🟤', '⚫']
 
     cols = st.columns(min(k_value, 3))
     for i in range(k_value):
@@ -362,7 +359,7 @@ with tab1:
             prov_list = "  •  ".join(subset['provinsi'].values)
             st.markdown(f"""
             <div class="cluster-card {card_class}">
-                <div class="cluster-card-title">{icons[i]} {label_map[i]} — {label_desc.get(i, 'Grup')}</div>
+                <div class="cluster-card-title">{label_map[i]} — {label_desc.get(i, 'Grup')}</div>
                 <div class="cluster-card-count">{len(subset)} Provinsi</div>
                 <div class="cluster-card-members"><strong>Anggota:</strong><br>{prov_list}</div>
             </div>""", unsafe_allow_html=True)
@@ -410,23 +407,23 @@ with tab2:
         plt.close()
 
     st.markdown("---")
-    st.subheader("📊 Tabel Evaluasi Semua Nilai K")
+    st.subheader("Tabel Evaluasi Semua Nilai K")
     eval_df = pd.DataFrame({
         'K': list(range(2, 11)),
         'WCSS': [round(w, 2) for w in wcss_list],
         'Silhouette Score': [round(s, 4) for s in sil_list]
     })
-    eval_df['Status'] = eval_df['K'].apply(lambda x: '✅ Dipilih' if x == k_value else '')
+    eval_df['Status'] = eval_df['K'].apply(lambda x: 'Dipilih' if x == k_value else '')
     st.dataframe(eval_df.style.highlight_max(subset=['Silhouette Score'], color='#c8e6c9'), use_container_width=True)
 
     st.info(f"""
     **Interpretasi Silhouette Score:**
-    - **≥ 0.70** → Sangat Baik
-    - **0.50 – 0.69** → Baik
-    - **0.25 – 0.49** → Cukup
-    - **< 0.25** → Kurang
+    - **>= 0.70** -> Sangat Baik
+    - **0.50 - 0.69** -> Baik
+    - **0.25 - 0.49** -> Cukup
+    - **< 0.25** -> Kurang
 
-    Hasil untuk K={k_value}: **{sil_score_val:.4f}** — {'Baik ✅' if sil_score_val >= 0.5 else 'Cukup ⚠️'}
+    Hasil untuk K={k_value}: **{sil_score_val:.4f}** — {'Baik' if sil_score_val >= 0.5 else 'Cukup'}
     """)
 
 # ============================================================
@@ -532,7 +529,7 @@ with tab4:
         options=['Semua'] + [f"{label_map[i]} – {label_desc.get(i,'')}" for i in range(k_value)]
     )
 
-    search = st.text_input("🔍 Cari provinsi:", placeholder="Contoh: Papua, Jawa, Bali...")
+    search = st.text_input("Cari provinsi:", placeholder="Contoh: Papua, Jawa, Bali...")
 
     df_show = df[['provinsi', 'label_cluster'] + fitur].copy()
     df_show.columns = ['Provinsi', 'Cluster'] + fitur_label_short
@@ -550,7 +547,7 @@ with tab4:
     st.subheader("Statistik per Cluster")
     for c in range(k_value):
         subset = df[df['cluster'] == c]
-        with st.expander(f"{icons[c]} {label_map[c]} – {label_desc.get(c, '')} ({len(subset)} provinsi)"):
+        with st.expander(f"{label_map[c]} – {label_desc.get(c, '')} ({len(subset)} provinsi)"):
             stat = subset[fitur].describe().round(2)
             stat.columns = fitur_label_short
             st.dataframe(stat, use_container_width=True)
@@ -560,7 +557,7 @@ with tab4:
 # TAB 5 — UNDUH HASIL
 # ============================================================
 with tab5:
-    st.subheader("📥 Unduh Hasil Clustering")
+    st.subheader("Unduh Hasil Clustering")
     st.markdown("Unduh hasil analisis dalam format CSV untuk keperluan lebih lanjut.")
 
     df_download = df[['provinsi', 'cluster', 'label_cluster'] + fitur].copy()
@@ -568,14 +565,14 @@ with tab5:
 
     csv = df_download.to_csv(index=False).encode('utf-8')
     st.download_button(
-        label="⬇️ Download Hasil Clustering (CSV)",
+        label="Download Hasil Clustering (CSV)",
         data=csv,
         file_name="hasil_clustering_pendidikan_indonesia.csv",
         mime="text/csv"
     )
 
     st.markdown("---")
-    st.subheader("📋 Preview Data yang Akan Diunduh")
+    st.subheader("Preview Data yang Akan Diunduh")
     st.dataframe(df_download, use_container_width=True)
 
     st.markdown("---")
